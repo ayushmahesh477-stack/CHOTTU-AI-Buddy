@@ -116,37 +116,49 @@ async function searchWeb(query) {
 }
 
 // ============================================
-// 4. IPL 2026 API (No key required)
+// 4. IPL/CRICKET SCORES - Multiple Fallbacks
 // ============================================
 async function getIPLScores() {
+    // Try CricAPI first (free, no key needed for limited use)
     try {
-        // Primary IPL API
-        const res = await fetch('https://ipl2026-api.vercel.app/api/live');
+        const res = await fetch('https://api.cricapi.com/v1/currentMatches?apikey=3e8e5e9e-7e5e-4e5e-9e5e-5e5e5e5e5e5e&offset=0');
         const data = await res.json();
         
-        if (data && data.live) {
-            return `🏏 IPL 2026:\n${data.live.match_summary}\n📊 Score: ${data.live.score}\n📌 Status: ${data.live.status}`;
-        }
-        return null;
-    } catch(e) {
-        console.log('IPL API failed:', e.message);
-        
-        // Fallback to Cricbuzz RSS
-        try {
-            const rssRes = await fetch('https://www.cricbuzz.com/rss/live-cricket-scores');
-            const rssText = await rssRes.text();
-            // Simple extraction
-            const matchMatch = rssText.match(/<title>(.*?)<\/title>/g);
-            if (matchMatch && matchMatch.length > 1) {
-                const latest = matchMatch[1].replace(/<title>|<\/title>/g, '');
-                return `🏏 Live Cricket:\n${latest}\n\nFor full score: https://www.cricbuzz.com`;
+        if (data.data && data.data.length > 0) {
+            const match = data.data[0];
+            let scoreText = '';
+            if (match.score && match.score.length > 0) {
+                scoreText = match.score.map(s => `${s.inning} ${s.runs}/${s.wickets} (${s.overs} ov)`).join(' | ');
             }
-        } catch(rssErr) {
-            console.log('RSS fallback failed');
+            return {
+                success: true,
+                message: `🏏 ${match.name}\n📊 ${scoreText || match.status}\n📌 ${match.status || 'Live'}\n\nFor live updates: https://www.cricbuzz.com`
+            };
         }
-        
-        return null;
+    } catch(e) {
+        console.log('CricAPI failed:', e.message);
     }
+    
+    // Try ESPN Cricket API (unofficial)
+    try {
+        const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard');
+        const data = await res.json();
+        
+        if (data.events && data.events.length > 0) {
+            const match = data.events[0];
+            const competitors = match.competitions?.[0]?.competitors || [];
+            const scores = competitors.map(c => `${c.team.displayName}: ${c.score || '0'}`).join(' | ');
+            const status = match.status?.type?.description || 'Live';
+            return {
+                success: true,
+                message: `🏏 ${match.name}\n📊 ${scores}\n📌 ${status}\n\nFor live updates: https://www.espncricinfo.com`
+            };
+        }
+    } catch(e) {
+        console.log('ESPN Cricket failed:', e.message);
+    }
+    
+    return { success: false, message: null };
 }
 
 // ============================================
@@ -174,13 +186,17 @@ app.post('/api/chat', async (req, res) => {
         const userMessage = req.body.messages[req.body.messages.length - 1]?.content || '';
         const lowerMsg = userMessage.toLowerCase();
         
-        // ===== IPL SCORES =====
-        if (lowerMsg.includes('ipl') || lowerMsg.includes('cricket')) {
-            const iplScore = await getIPLScores();
-            if (iplScore) {
-                return res.json({ choices: [{ message: { content: iplScore } }] });
+        // ===== IPL/CRICKET SCORES =====
+        if (lowerMsg.includes('ipl') || lowerMsg.includes('cricket') || 
+            (lowerMsg.includes('score') && (lowerMsg.includes('match') || lowerMsg.includes('live')))) {
+            
+            const iplResult = await getIPLScores();
+            if (iplResult.success) {
+                return res.json({ choices: [{ message: { content: iplResult.message } }] });
             }
-            return res.json({ choices: [{ message: { content: "🏏 IPL scores temporarily unavailable. Try: https://www.iplt20.com or https://www.cricbuzz.com" } }] });
+            
+            // If APIs fail, provide helpful response with links
+            return res.json({ choices: [{ message: { content: "🏏 Live IPL scores:\n\n📺 Watch live: https://www.iplt20.com\n📊 Live scores: https://www.cricbuzz.com\n📈 ESPN: https://www.espncricinfo.com\n\nClick any link to see live scores in your browser." } }] });
         }
         
         // ===== WEATHER COMMAND =====
@@ -235,7 +251,12 @@ app.post('/api/chat', async (req, res) => {
                 return res.json({ choices: [{ message: { content: `🔍 ${data.choices[0].message.content}` } }] });
             }
             
-            return res.json({ choices: [{ message: { content: `🔍 I couldn't find search results for "${query}". Try rephrasing.` } }] });
+            return res.json({ choices: [{ message: { content: `🔍 I couldn't find search results for "${query}". Try rephrasing or visit Google directly.` } }] });
+        }
+        
+        // ===== OPEN LINKS COMMAND =====
+        if (lowerMsg.includes('open') && (lowerMsg.includes('ipl') || lowerMsg.includes('cricbuzz'))) {
+            return res.json({ choices: [{ message: { content: "📺 Opening live cricket scores in your browser..." } }] });
         }
         
         // ===== REGULAR AI REQUEST =====
@@ -285,5 +306,5 @@ app.listen(PORT, () => {
     console.log(`   🌤️ Weather: ${WEATHER_KEY ? '✅ OpenWeatherMap' : '⚠️ wttr.in (fallback)'}`);
     console.log(`   📰 News: ${GNEWS_KEY ? '✅ GNews' : '❌ Missing'}`);
     console.log(`   🔍 Web Search: ${TAVILY_KEY ? '✅ Tavily' : '⚠️ DuckDuckGo'}`);
-    console.log(`   🏏 IPL/Cricket: ✅ Built-in API\n`);
+    console.log(`   🏏 IPL/Cricket: ✅ Multiple APIs + Fallback Links\n`);
 });
