@@ -3,125 +3,210 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chottu - Your AI Buddy</title>
+  <title>N.E.T.H.U - Neural Enhanced Tech Humanoid Unit</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #0a0e1a;
+      font-family: 'Segoe UI', 'Roboto Mono', monospace;
+      background: #000 url('final.png') center/cover fixed no-repeat;
       color: #00ff88;
       overflow: hidden;
+      height: 100vh;
     }
+    
+    /* Dark overlay so chat is readable over busy background */
+   .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 5, 3, 0.88);
+      backdrop-filter: blur(1px);
+      z-index: 1;
+    }
+
    .container {
-      max-width: 900px;
+      position: relative;
+      z-index: 2;
+      max-width: 1100px;
       margin: 0 auto;
       height: 100vh;
       display: flex;
       flex-direction: column;
       padding: 20px;
     }
+    
    .header {
       display: flex;
       align-items: center;
       gap: 15px;
-      padding: 15px 20px;
-      background: rgba(0, 255, 136, 0.05);
+      padding: 15px 25px;
+      background: rgba(0, 255, 136, 0.06);
       border: 1px solid #00ff88;
       border-radius: 12px;
       margin-bottom: 20px;
+      box-shadow: 0 0 25px rgba(0, 255, 136, 0.15);
     }
+    
    .logo {
-      width: 50px;
-      height: 50px;
-      background: url('final.png') center/cover;
+      width: 55px;
+      height: 55px;
+      background: url('nethu_core.png') center/cover;
       border-radius: 50%;
       border: 2px solid #00ff88;
+      box-shadow: 0 0 20px #00ff88;
+      animation: pulse 3s infinite;
     }
-   .title { font-size: 28px; font-weight: bold; letter-spacing: 2px; }
+    
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 20px #00ff88; }
+      50% { box-shadow: 0 0 35px #00ff88, 0 0 50px rgba(0, 255, 136, 0.4); }
+    }
+    
+   .title { 
+      font-size: 30px; 
+      font-weight: 700; 
+      letter-spacing: 4px;
+      text-shadow: 0 0 15px #00ff88;
+    }
+    
    .status { display: flex; gap: 10px; margin-left: auto; }
    .badge {
-      padding: 6px 12px;
+      padding: 6px 14px;
       border: 1px solid #00ff88;
       border-radius: 20px;
       font-size: 11px;
       background: rgba(0, 255, 136, 0.1);
+      text-transform: uppercase;
     }
+    
    .chat-box {
       flex: 1;
-      background: rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.5);
       border: 1px solid #00ff88;
       border-radius: 12px;
-      padding: 20px;
+      padding: 25px;
       overflow-y: auto;
       margin-bottom: 20px;
+      box-shadow: inset 0 0 40px rgba(0, 255, 136, 0.08);
     }
+    
+    .chat-box::-webkit-scrollbar { width: 8px; }
+    .chat-box::-webkit-scrollbar-track { background: rgba(0, 255, 136, 0.05); }
+    .chat-box::-webkit-scrollbar-thumb { background: #00ff88; border-radius: 4px; }
+    
    .msg {
-      margin: 15px 0;
+      margin: 18px 0;
       display: flex;
-      gap: 12px;
-      animation: slideIn 0.3s;
+      gap: 14px;
+      animation: slideIn 0.4s ease;
     }
+    
     @keyframes slideIn {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(15px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    
    .msg.user { flex-direction: row-reverse; }
+   
    .avatar {
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
-      background: url('final.png') center/cover;
+      background: url('nethu_core.png') center/cover;
       border: 2px solid #00ff88;
       flex-shrink: 0;
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
     }
-   .msg.user.avatar { background: #00ff88; }
+    
+   .msg.user .avatar { 
+      background: #00ff88;
+      border: 2px solid #00ff88;
+    }
+    
    .bubble {
       max-width: 70%;
-      padding: 12px 18px;
-      background: rgba(0, 255, 136, 0.1);
+      padding: 14px 20px;
+      background: rgba(0, 255, 136, 0.08);
       border: 1px solid #00ff88;
       border-radius: 18px;
-      line-height: 1.6;
+      line-height: 1.7;
+      box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
     }
-   .msg.user.bubble { background: rgba(0, 255, 136, 0.2); }
+    
+   .msg.user .bubble { 
+      background: rgba(0, 255, 136, 0.18);
+      border: 1px solid #00ff88;
+    }
+    
    .input-area {
       display: flex;
-      gap: 10px;
-      padding: 15px;
-      background: rgba(0, 0, 0, 0.3);
+      gap: 12px;
+      padding: 18px;
+      background: rgba(0, 0, 0, 0.5);
       border: 1px solid #00ff88;
       border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
     }
+    
     input {
       flex: 1;
-      padding: 12px 18px;
+      padding: 14px 20px;
       background: rgba(0, 255, 136, 0.05);
       border: 1px solid #00ff88;
       border-radius: 25px;
       color: #00ff88;
       font-size: 15px;
       outline: none;
+      transition: all 0.3s;
     }
-    input::placeholder { color: rgba(0, 255, 136, 0.5); }
+    
+    input:focus {
+      background: rgba(0, 255, 136, 0.1);
+      box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+    }
+    
+    input::placeholder { color: rgba(0, 255, 136, 0.4); }
+    
     button {
-      padding: 12px 20px;
+      padding: 14px 24px;
       background: rgba(0, 255, 136, 0.1);
       border: 1px solid #00ff88;
       border-radius: 25px;
       color: #00ff88;
       cursor: pointer;
       transition: all 0.3s;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 13px;
+      letter-spacing: 1px;
     }
-    button:hover { background: rgba(0, 255, 136, 0.2); }
-    button.active { background: #00ff88; color: #0a0e1a; }
-   .controls { display: flex; gap: 10px; margin-top: 10px; }
+    
+    button:hover { 
+      background: rgba(0, 255, 136, 0.25);
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+      transform: translateY(-1px);
+    }
+    
+    button.active { 
+      background: #00ff88; 
+      color: #000;
+      box-shadow: 0 0 25px #00ff88;
+    }
+    
+   .controls { 
+      display: flex; 
+      gap: 10px; 
+      margin-top: 12px;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
+  <div class="overlay"></div>
   <div class="container">
     <div class="header">
       <div class="logo"></div>
-      <div class="title">CHOTTU</div>
+      <div class="title">N.E.T.H.U</div>
       <div class="status">
         <div class="badge" id="wakeStatus">WAKE WORD OFF</div>
         <div class="badge">ENCRYPTED</div>
@@ -132,7 +217,7 @@
     <div class="chat-box" id="chatBox">
       <div class="msg">
         <div class="avatar"></div>
-        <div class="bubble">Hai friend, Chottu here. How can I help you today?</div>
+        <div class="bubble">Hai friend, N.E.T.H.U here. How can I assist you today?</div>
       </div>
     </div>
 
@@ -157,10 +242,13 @@
     const clearBtn = document.getElementById('clearBtn');
     const wakeStatus = document.getElementById('wakeStatus');
 
+    // Load saved name from browser memory, default to 'friend'
+    let userName = localStorage.getItem('nethu_username') || 'friend';
+
     let messages = [
       {
         role: "system", 
-        content: "You are Chottu, a friendly AI buddy from Chennai. Address the user as 'friend' only. Never use their real name unless they tell you. Be casual, helpful, and use simple English. Keep replies short and conversational."
+        content: `You are N.E.T.H.U, a Neural Enhanced Tech Humanoid Unit. Address the user as '${userName}'. If the user tells you their name or says 'call me X', remember it and use it from then on. Be casual, helpful, and slightly futuristic. Keep replies short and conversational. Don't overuse the name.`
       }
     ];
 
@@ -182,9 +270,21 @@
     function speak(text) {
       if (!voiceReplyOn) return;
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.1;
-      utterance.pitch = 1;
+      utterance.rate = 1.05;
+      utterance.pitch = 0.9;
       speechSynthesis.speak(utterance);
+    }
+
+    function checkForName(text) {
+      // Detects "my name is X", "I'm X", "call me X"
+      const nameMatch = text.match(/(?:my name is|i'm|i am|call me|name's)\s+([a-zA-Z]+)/i);
+      if (nameMatch && nameMatch[1]) {
+        const newName = nameMatch[1].charAt(0).toUpperCase() + nameMatch[1].slice(1);
+        userName = newName;
+        localStorage.setItem('nethu_username', newName);
+        // Update system prompt with new name
+        messages[0].content = `You are N.E.T.H.U, a Neural Enhanced Tech Humanoid Unit. Address the user as '${userName}'. If the user tells you their name or says 'call me X', remember it and use it from then on. Be casual, helpful, and slightly futuristic. Keep replies short and conversational. Don't overuse the name.`;
+      }
     }
 
     async function sendMessage() {
@@ -194,6 +294,7 @@
       addMessage(text, true);
       userInput.value = '';
 
+      checkForName(text);
       messages.push({ role: "user", content: text });
 
       try {
@@ -211,7 +312,7 @@
         speak(reply);
 
       } catch (err) {
-        addMessage('Sorry friend, connection error. Check if server is running.', false);
+        addMessage(`Sorry ${userName}, connection error. N.E.T.H.U core offline.`, false);
       }
     }
 
@@ -228,32 +329,4 @@
         recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.onresult = (e) => {
-          const transcript = e.results[e.results.length - 1][0].transcript.toLowerCase();
-          if (transcript.includes('hey chottu') || transcript.includes('hi chottu')) {
-            userInput.value = transcript.replace(/hey chottu|hi chottu/, '').trim();
-            sendMessage();
-          }
-        };
-        recognition.start();
-      } else {
-        if (recognition) recognition.stop();
-      }
-    };
-
-    voiceBtn.onclick = () => {
-      voiceReplyOn =!voiceReplyOn;
-      voiceBtn.classList.toggle('active');
-    };
-
-    clearBtn.onclick = () => {
-      chatBox.innerHTML = `
-        <div class="msg">
-          <div class="avatar"></div>
-          <div class="bubble">Hai friend, Chottu here. How can I help you today?</div>
-        </div>
-      `;
-      messages = [messages[0]]; // Keep system prompt
-    };
-  </script>
-</body>
-</html>
+          const transcript = e.results[e.results.length - 1][0].trans
