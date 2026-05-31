@@ -66,22 +66,26 @@ async function getNews(topic = 'India') {
 // 3. WEB SEARCH - Tavily + DuckDuckGo Fallback
 // ============================================
 async function searchWeb(query) {
+    console.log(`Searching for: ${query}`);
+    
     if (!TAVILY_KEY) {
         try {
             const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`);
             const data = await res.json();
             
             if (data.AbstractText) {
-                return data.AbstractText.substring(0, 500);
+                return data.AbstractText.substring(0, 800);
             }
             if (data.RelatedTopics && data.RelatedTopics.length > 0) {
-                const first = data.RelatedTopics[0];
-                if (first.Text) {
-                    return first.Text.substring(0, 500);
+                for (const topic of data.RelatedTopics) {
+                    if (topic.Text) {
+                        return topic.Text.substring(0, 800);
+                    }
                 }
             }
             return null;
-        } catch {
+        } catch (e) {
+            console.log('DuckDuckGo search failed:', e.message);
             return null;
         }
     }
@@ -111,76 +115,41 @@ async function searchWeb(query) {
         
         return data.results.map(r => r.content).join(' ').substring(0, 1000);
     } catch (e) {
+        console.log('Tavily search failed:', e.message);
         return null;
     }
 }
 
 // ============================================
-// 4. IPL/CRICKET SCORES - Direct Web Scraping (Working!)
+// 4. Get IPL scores via web search
 // ============================================
-async function getIPLScores() {
-    const results = [];
+async function getIPLScoresViaSearch() {
+    const searchQuery = 'IPL 2026 final match live score today';
+    const searchResults = await searchWeb(searchQuery);
     
-    // Method 1: Cricbuzz Mobile API (Most reliable)
-    try {
-        const res = await fetch('https://www.cricbuzz.com/api/html/cricket-scorecard', {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            }
-        });
-        // Note: This endpoint may need adjustment
-    } catch(e) {}
-    
-    // Method 2: ESPN Cricinfo RSS Feed (Always works)
-    try {
-        const rssRes = await fetch('https://www.espncricinfo.com/rss/content/story/feeds/0.xml');
-        const rssText = await rssRes.text();
+    if (searchResults) {
+        const prompt = `Based on these search results, tell me the current IPL 2026 final match score. Be specific with runs, wickets, overs, and which team is batting. If no live match is happening, say so:\n\n${searchResults}`;
         
-        // Parse RSS to extract match info
-        const matches = [];
-        const titleMatches = rssText.match(/<title>(.*?)<\/title>/g);
-        const descMatches = rssText.match(/<description>(.*?)<\/description>/g);
-        
-        if (titleMatches && titleMatches.length > 0) {
-            for (let i = 1; i < Math.min(titleMatches.length, 6); i++) {
-                const title = titleMatches[i].replace(/<title>|<\/title>/g, '');
-                if (title.includes('IPL') || title.includes('cricket') || title.includes('vs')) {
-                    let desc = '';
-                    if (descMatches && descMatches[i]) {
-                        desc = descMatches[i].replace(/<description>|<\/description>|<![CDATA[|]]>/g, '').substring(0, 200);
-                    }
-                    matches.push({ title, desc });
-                }
-            }
+        try {
+            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${GROQ_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'llama-3.3-70b-versatile',
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.3,
+                    max_tokens: 300
+                })
+            });
+            const data = await response.json();
+            return { success: true, message: data.choices[0].message.content };
+        } catch(e) {
+            return { success: true, message: searchResults.substring(0, 500) };
         }
-        
-        if (matches.length > 0) {
-            let scoreText = '🏏 Live Cricket Scores:\n\n';
-            for (const match of matches) {
-                scoreText += `📌 ${match.title}\n`;
-                if (match.desc) scoreText += `   ${match.desc}\n`;
-                scoreText += '\n';
-            }
-            scoreText += '─'.repeat(40) + '\n📺 For live updates: https://www.espncricinfo.com';
-            return { success: true, message: scoreText };
-        }
-    } catch(e) {
-        console.log('ESPN RSS failed:', e.message);
     }
-    
-    // Method 3: Use DuckDuckGo to search and return results
-    try {
-        const searchQuery = 'IPL 2026 live score today';
-        const searchRes = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(searchQuery)}&format=json&no_html=1`);
-        const searchData = await searchRes.json();
-        
-        if (searchData.AbstractText) {
-            return { 
-                success: true, 
-                message: `🏏 IPL Updates:\n\n${searchData.AbstractText.substring(0, 500)}\n\n─'.repeat(40)}\n📺 For live scores: https://www.cricbuzz.com` 
-            };
-        }
-    } catch(e) {}
     
     return { success: false, message: null };
 }
@@ -210,28 +179,26 @@ app.post('/api/chat', async (req, res) => {
         const userMessage = req.body.messages[req.body.messages.length - 1]?.content || '';
         const lowerMsg = userMessage.toLowerCase();
         
-        // ===== IPL/CRICKET SCORES - DIRECT DISPLAY =====
-        if (lowerMsg.includes('ipl') || lowerMsg.includes('cricket') || 
-            lowerMsg.includes('score') || lowerMsg.includes('match')) {
-            
-            const iplResult = await getIPLScores();
-            if (iplResult.success) {
-                return res.json({ choices: [{ message: { content: iplResult.message } }] });
-            }
-            
-            // If APIs fail, provide direct links that open in browser
-            return res.json({ choices: [{ message: { content: "🏏 Live IPL Scores:\n\nI'll search the web for you. Type:\n\n🔍 'search for IPL 2026 final score'\n\nOr click these links:\n• https://www.iplt20.com\n• https://www.cricbuzz.com\n• https://www.espncricinfo.com\n\nThe scores will open in your browser." } }] });
-        }
+        console.log(`Received: ${userMessage}`);
         
-        // ===== SEARCH COMMAND - Will fetch and display results =====
-        if (lowerMsg.includes('search for') || lowerMsg.includes('search the web')) {
-            let query = userMessage.replace(/search for|search the web/gi, '').trim();
-            if (!query) query = 'IPL 2026 live score';
+        // ===== IMPORTANT: Check for SEARCH command FIRST =====
+        if (lowerMsg.startsWith('search for') || 
+            lowerMsg.startsWith('search the web') ||
+            lowerMsg.includes('search for ipl') ||
+            lowerMsg.includes('find ipl') ||
+            (lowerMsg.includes('search') && lowerMsg.includes('score'))) {
             
-            const searchResults = await searchWeb(query);
+            console.log('Processing search command...');
+            
+            // Extract the search query
+            let searchQuery = userMessage;
+            searchQuery = searchQuery.replace(/search for|search the web|please|can you/gi, '').trim();
+            if (!searchQuery || searchQuery.length < 3) searchQuery = 'IPL 2026 live score';
+            
+            const searchResults = await searchWeb(searchQuery);
             
             if (searchResults) {
-                const searchPrompt = `Based on these search results, answer the user's query about IPL/cricket scores:\n\nUser query: ${query}\n\nSearch results:\n${searchResults}\n\nProvide a concise answer with the current score if available. If no specific score found, give the most relevant information from the search.`;
+                const searchPrompt = `Based on these search results, answer the user's question: "${userMessage}"\n\nSearch results:\n${searchResults}\n\nProvide a clear, helpful answer. If it's about IPL/cricket scores, give the specific score (runs/wickets/overs). If no live match, say so.`;
                 
                 const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
@@ -250,7 +217,21 @@ app.post('/api/chat', async (req, res) => {
                 return res.json({ choices: [{ message: { content: `🔍 ${data.choices[0].message.content}` } }] });
             }
             
-            return res.json({ choices: [{ message: { content: `🔍 I couldn't find IPL scores. Try:\n• iplt20.com\n• cricbuzz.com\n• espncricinfo.com` } }] });
+            return res.json({ choices: [{ message: { content: `🔍 I couldn't find results for "${searchQuery}". Try visiting cricbuzz.com for live scores.` } }] });
+        }
+        
+        // ===== IPL SCORES (without "search for" - just "ipl score") =====
+        if ((lowerMsg.includes('ipl') || lowerMsg.includes('cricket score')) && 
+            !lowerMsg.includes('search for') && 
+            (lowerMsg.includes('score') || lowerMsg.includes('live') || lowerMsg.includes('match'))) {
+            
+            console.log('Processing IPL score command...');
+            const iplResult = await getIPLScoresViaSearch();
+            if (iplResult.success) {
+                return res.json({ choices: [{ message: { content: iplResult.message } }] });
+            }
+            
+            return res.json({ choices: [{ message: { content: "🏏 To get live IPL scores, type: 'search for IPL 2026 final score'" } }] });
         }
         
         // ===== WEATHER COMMAND =====
@@ -322,5 +303,5 @@ app.listen(PORT, () => {
     console.log(`   🌤️ Weather: ${WEATHER_KEY ? '✅ OpenWeatherMap' : '⚠️ wttr.in (fallback)'}`);
     console.log(`   📰 News: ${GNEWS_KEY ? '✅ GNews' : '❌ Missing'}`);
     console.log(`   🔍 Web Search: ${TAVILY_KEY ? '✅ Tavily' : '⚠️ DuckDuckGo'}`);
-    console.log(`   🏏 IPL/Cricket: ✅ Web Search + RSS Feeds\n`);
+    console.log(`   🏏 IPL/Cricket: ✅ Search-based\n`);
 });
