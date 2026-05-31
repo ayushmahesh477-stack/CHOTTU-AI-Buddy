@@ -12,11 +12,10 @@ const GNEWS_KEY = process.env.GNEWS_KEY;
 const TAVILY_KEY = process.env.TAVILY_KEY;
 
 // ============================================
-// 1. WEATHER - OpenWeatherMap
+// 1. WEATHER - OpenWeatherMap + Fallback
 // ============================================
 async function getWeather(city = 'Chennai') {
     if (!WEATHER_KEY) {
-        // Fallback to free wttr.in
         try {
             const res = await fetch(`https://wttr.in/${city}?format=j1`);
             const data = await res.json();
@@ -64,11 +63,10 @@ async function getNews(topic = 'India') {
 }
 
 // ============================================
-// 3. WEB SEARCH - Tavily (Live Internet Search)
+// 3. WEB SEARCH - Tavily + DuckDuckGo Fallback
 // ============================================
 async function searchWeb(query) {
     if (!TAVILY_KEY) {
-        // Fallback to DuckDuckGo (no key needed)
         try {
             const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`);
             const data = await res.json();
@@ -118,6 +116,40 @@ async function searchWeb(query) {
 }
 
 // ============================================
+// 4. IPL 2026 API (No key required)
+// ============================================
+async function getIPLScores() {
+    try {
+        // Primary IPL API
+        const res = await fetch('https://ipl2026-api.vercel.app/api/live');
+        const data = await res.json();
+        
+        if (data && data.live) {
+            return `🏏 IPL 2026:\n${data.live.match_summary}\n📊 Score: ${data.live.score}\n📌 Status: ${data.live.status}`;
+        }
+        return null;
+    } catch(e) {
+        console.log('IPL API failed:', e.message);
+        
+        // Fallback to Cricbuzz RSS
+        try {
+            const rssRes = await fetch('https://www.cricbuzz.com/rss/live-cricket-scores');
+            const rssText = await rssRes.text();
+            // Simple extraction
+            const matchMatch = rssText.match(/<title>(.*?)<\/title>/g);
+            if (matchMatch && matchMatch.length > 1) {
+                const latest = matchMatch[1].replace(/<title>|<\/title>/g, '');
+                return `🏏 Live Cricket:\n${latest}\n\nFor full score: https://www.cricbuzz.com`;
+            }
+        } catch(rssErr) {
+            console.log('RSS fallback failed');
+        }
+        
+        return null;
+    }
+}
+
+// ============================================
 // Helper: Current Time (Chennai/IST)
 // ============================================
 function getCurrentDateTime() {
@@ -142,10 +174,18 @@ app.post('/api/chat', async (req, res) => {
         const userMessage = req.body.messages[req.body.messages.length - 1]?.content || '';
         const lowerMsg = userMessage.toLowerCase();
         
+        // ===== IPL SCORES =====
+        if (lowerMsg.includes('ipl') || lowerMsg.includes('cricket')) {
+            const iplScore = await getIPLScores();
+            if (iplScore) {
+                return res.json({ choices: [{ message: { content: iplScore } }] });
+            }
+            return res.json({ choices: [{ message: { content: "🏏 IPL scores temporarily unavailable. Try: https://www.iplt20.com or https://www.cricbuzz.com" } }] });
+        }
+        
         // ===== WEATHER COMMAND =====
         if (lowerMsg.includes('weather') || lowerMsg.includes('temperature') || lowerMsg.includes('rain') || lowerMsg.includes('humidity')) {
-            const cityMatch = userMessage.match(/weather in (\w+)/i) || 
-                              userMessage.match(/weather (\w+)/i);
+            const cityMatch = userMessage.match(/weather in (\w+)/i) || userMessage.match(/weather (\w+)/i);
             const city = cityMatch ? cityMatch[1] : 'Chennai';
             const weather = await getWeather(city);
             return res.json({ choices: [{ message: { content: weather } }] });
@@ -159,40 +199,10 @@ app.post('/api/chat', async (req, res) => {
         // ===== NEWS COMMAND =====
         if (lowerMsg.includes('news') || lowerMsg.includes('headline') || lowerMsg.includes('headlines')) {
             let topic = 'India';
-            const topicMatch = userMessage.match(/news about (\w+)/i) || 
-                              userMessage.match(/news on (\w+)/i);
+            const topicMatch = userMessage.match(/news about (\w+)/i) || userMessage.match(/news on (\w+)/i);
             if (topicMatch) topic = topicMatch[1];
             const news = await getNews(topic);
             return res.json({ choices: [{ message: { content: `📰 Top headlines:\n${news}` } }] });
-        }
-        
-        // ===== SPORTS/IPL/SCORE COMMAND =====
-        if (lowerMsg.includes('ipl') || lowerMsg.includes('cricket') || lowerMsg.includes('score') || lowerMsg.includes('match') || lowerMsg.includes('sports')) {
-            const searchQuery = `IPL 2026 final score ${new Date().toLocaleDateString()} cricket match result`;
-            const searchResults = await searchWeb(searchQuery);
-            
-            if (searchResults) {
-                // Use Groq to summarize the search results
-                const sportsPrompt = `Based on these search results, answer the user's question about IPL/cricket/score:\n\nUser question: ${userMessage}\n\nSearch results:\n${searchResults}\n\nGive a concise, factual answer about the current score or match status. If no live score found in the search results, say "I couldn't find live scores. Try searching Google for 'IPL 2026 live score'." Be honest about what you found.`;
-                
-                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${GROQ_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        model: 'llama-3.3-70b-versatile',
-                        messages: [{ role: 'user', content: sportsPrompt }],
-                        temperature: 0.3,
-                        max_tokens: 300
-                    })
-                });
-                const data = await response.json();
-                return res.json({ choices: [{ message: { content: data.choices[0].message.content } }] });
-            }
-            
-            return res.json({ choices: [{ message: { content: "🏏 I couldn't find live IPL scores. Try searching Google for 'IPL 2026 live score' or check the official IPL website." } }] });
         }
         
         // ===== WEB SEARCH COMMAND =====
@@ -206,8 +216,7 @@ app.post('/api/chat', async (req, res) => {
             const searchResults = await searchWeb(query);
             
             if (searchResults) {
-                // Let Groq summarize search results
-                const searchPrompt = `Based on these search results, answer the user's query:\n\nUser query: ${query}\n\nSearch results:\n${searchResults}\n\nGive a helpful, accurate answer based on the search results. If the results don't fully answer the question, say so.`;
+                const searchPrompt = `Based on these search results, answer the user's query:\n\nUser query: ${query}\n\nSearch results:\n${searchResults}\n\nGive a helpful, accurate answer based on the search results.`;
                 
                 const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
@@ -226,15 +235,15 @@ app.post('/api/chat', async (req, res) => {
                 return res.json({ choices: [{ message: { content: `🔍 ${data.choices[0].message.content}` } }] });
             }
             
-            return res.json({ choices: [{ message: { content: `🔍 I couldn't find search results for "${query}". Try rephrasing or checking your internet connection.` } }] });
+            return res.json({ choices: [{ message: { content: `🔍 I couldn't find search results for "${query}". Try rephrasing.` } }] });
         }
         
-        // ===== REGULAR AI REQUEST with real-time context =====
+        // ===== REGULAR AI REQUEST =====
         const messages = req.body.messages;
         const enhancedMessages = [...messages];
         
         if (enhancedMessages[0]?.role === 'system') {
-            enhancedMessages[0].content = `${enhancedMessages[0].content}\n\n📌 REAL-TIME CONTEXT:\n- Current date/time: ${getCurrentDateTime()}\n- User location: Chennai, India (IST timezone)\n- Today is ${new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n- Answer helpfully and concisely. If asked about live events (sports, news, current scores), say you don't have live data and suggest searching. Be friendly and call the user "friend".`;
+            enhancedMessages[0].content = `${enhancedMessages[0].content}\n\n📌 REAL-TIME CONTEXT:\n- Current date/time: ${getCurrentDateTime()}\n- User location: Chennai, India (IST timezone)\n- Answer helpfully and concisely. Call the user "friend".`;
         }
         
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -275,6 +284,6 @@ app.listen(PORT, () => {
     console.log(`   🧠 Groq AI: ${GROQ_KEY ? '✅' : '❌'}`);
     console.log(`   🌤️ Weather: ${WEATHER_KEY ? '✅ OpenWeatherMap' : '⚠️ wttr.in (fallback)'}`);
     console.log(`   📰 News: ${GNEWS_KEY ? '✅ GNews' : '❌ Missing'}`);
-    console.log(`   🔍 Web Search: ${TAVILY_KEY ? '✅ Tavily' : '⚠️ DuckDuckGo (fallback)'}`);
-    console.log(`   📅 Time/Date: ✅ Built-in\n`);
+    console.log(`   🔍 Web Search: ${TAVILY_KEY ? '✅ Tavily' : '⚠️ DuckDuckGo'}`);
+    console.log(`   🏏 IPL/Cricket: ✅ Built-in API\n`);
 });
