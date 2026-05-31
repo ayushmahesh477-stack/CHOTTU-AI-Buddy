@@ -1,10 +1,17 @@
 const express = require('express');
 const app = express();
+const path = require('path');
+
 app.use(express.json());
 app.use(express.static('.'));
 
-// This is your GROQ key from console.groq.com
-const GROQ_KEY = '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';
+// Use environment variable - NEVER hardcode keys
+const GROQ_KEY = process.env.GROQ_KEY;
+
+if (!GROQ_KEY) {
+  console.error('ERROR: GROQ_KEY environment variable not set');
+  process.exit(1);
+}
 
 app.post('/api/chat', async (req, res) => {
   try {
@@ -15,7 +22,7 @@ app.post('/api/chat', async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile', // Groq's fastest model
+        model: 'llama-3.3-70b-versatile',
         messages: req.body.messages,
         temperature: 0.7,
         max_tokens: 1024
@@ -36,4 +43,5 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-app.listen(3000, () => console.log('N.E.T.H.U online: http://localhost:3000'));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Chottu online on port ${PORT}`));
