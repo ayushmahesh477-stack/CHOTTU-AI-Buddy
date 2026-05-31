@@ -6,6 +6,7 @@
   <title>Chottu - Your AI Buddy</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
+    /* [PASTE YOUR EXISTING STYLES HERE - they remain the same] */
     * {
       margin: 0;
       padding: 0;
@@ -354,16 +355,6 @@
       box-shadow: 0 0 18px #00ffaa;
     }
 
-    /* IPL Link Chips */
-    .ipl-link {
-      background: rgba(255, 100, 0, 0.2);
-      border-color: #ff6600;
-    }
-    .ipl-link:hover {
-      background: rgba(255, 100, 0, 0.4);
-      box-shadow: 0 0 18px #ff6600;
-    }
-
     @media (max-width: 700px) {
       .chottu-container {
         height: 95vh;
@@ -424,9 +415,7 @@
         <span class="chip" data-query="Open Gmail">📧 Gmail</span>
         <span class="chip" data-query="What time is it">🕒 Time</span>
         <span class="chip" data-query="What's the weather in Chennai">🌤️ Weather</span>
-        <span class="chip ipl-link" onclick="window.open('https://www.iplt20.com', '_blank')">🏏 IPL Official</span>
-        <span class="chip ipl-link" onclick="window.open('https://www.cricbuzz.com', '_blank')">🏏 Cricbuzz</span>
-        <span class="chip ipl-link" onclick="window.open('https://www.espncricinfo.com', '_blank')">🏏 ESPN</span>
+        <span class="chip" data-query="IPL 2026 live score">🏏 IPL Score</span>
         <span class="chip" data-query="Latest news India">📰 News</span>
         <span class="chip" data-query="Search Google for trending topics">🔍 Search</span>
         <span class="chip" data-query="Enable wake word">🎤 Wake Word</span>
@@ -438,6 +427,7 @@
 <input type="file" id="importFile" accept=".json" style="display:none">
 
 <script>
+  // [PASTE YOUR EXISTING JAVASCRIPT HERE - it remains the same as before]
   (function() {
     const chatWindow = document.getElementById('chatWindow');
     const userInput = document.getElementById('userInput');
@@ -487,10 +477,7 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
       'reddit': 'https://reddit.com',
       'twitter': 'https://x.com',
       'facebook': 'https://facebook.com',
-      'instagram': 'https://instagram.com',
-      'iplt20': 'https://www.iplt20.com',
-      'cricbuzz': 'https://www.cricbuzz.com',
-      'espncricinfo': 'https://www.espncricinfo.com'
+      'instagram': 'https://instagram.com'
     };
 
     function checkForName(text) {
@@ -868,7 +855,7 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
       }
     });
 
-    document.querySelectorAll('.chip[data-query]').forEach(chip => {
+    document.querySelectorAll('.chip').forEach(chip => {
       chip.addEventListener('click', function(e) {
         const query = this.getAttribute('data-query');
         if (query === 'Enable wake word') {
@@ -882,7 +869,6 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
       });
     });
 
-    // Load saved chat or greet new user
     window.addEventListener('load', () => {
       const hasHistory = loadChatHistory();
 
