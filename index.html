@@ -27,7 +27,7 @@
       padding: 1.5rem;
     }
 
-.chottu-container {
+    .chottu-container {
       width: 100%;
       max-width: 1100px;
       height: 90vh;
@@ -44,7 +44,7 @@
       transition: all 0.2s ease;
     }
 
-.assistant-header {
+    .assistant-header {
       padding: 1.4rem 2rem;
       border-bottom: 1px solid rgba(0, 255, 170, 0.25);
       display: flex;
@@ -55,13 +55,13 @@
       flex-wrap: wrap;
     }
 
-.logo-area {
+    .logo-area {
       display: flex;
       align-items: center;
       gap: 0.9rem;
     }
 
-.chottu-icon {
+    .chottu-icon {
       width: 48px;
       height: 48px;
       object-fit: contain;
@@ -69,13 +69,13 @@
       animation: orbPulse 3s ease-in-out infinite;
     }
 
-.chottu-icon.listening {
+    .chottu-icon.listening {
       animation: orbListening 0.6s ease-in-out infinite;
-   }
+    }
 
-.chottu-icon.speaking {
+    .chottu-icon.speaking {
       animation: orbSpeak 0.4s ease-in-out infinite;
-   }
+    }
 
     @keyframes orbPulse {
       0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(138, 43, 226, 0.8)) drop-shadow(0 0 25px rgba(0, 255, 170, 0.4)); }
@@ -92,7 +92,7 @@
       50% { transform: scale(1.15); }
     }
 
-.logo-text {
+    .logo-text {
       font-weight: 700;
       font-size: 2rem;
       letter-spacing: 2px;
@@ -103,7 +103,7 @@
       text-transform: uppercase;
     }
 
-.status-panel {
+    .status-panel {
       display: flex;
       align-items: center;
       gap: 1.2rem;
@@ -114,7 +114,7 @@
       box-shadow: 0 0 20px rgba(0, 255, 170, 0.2);
     }
 
-.core-status {
+    .core-status {
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -124,7 +124,7 @@
       cursor: pointer;
     }
 
-.pulse {
+    .pulse {
       width: 12px;
       height: 12px;
       background: #00ffaa;
@@ -133,11 +133,11 @@
       animation: pulseGlow 1.6s infinite;
     }
 
-.pulse.listening {
+    .pulse.listening {
       background: #ff0044;
       box-shadow: 0 0 20px #ff0044;
       animation: pulseListening 0.8s infinite;
-   }
+    }
 
     @keyframes pulseGlow {
       0% { opacity: 0.9; transform: scale(1); box-shadow: 0 0 10px #00ffaa; }
@@ -151,7 +151,7 @@
       100% { opacity: 1; transform: scale(1); box-shadow: 0 0 15px #ff0044; }
     }
 
-.neural-badge {
+    .neural-badge {
       background: #041410;
       padding: 0.3rem 1rem;
       border-radius: 20px;
@@ -162,7 +162,7 @@
       letter-spacing: 0.5px;
     }
 
-.chat-main {
+    .chat-main {
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -173,27 +173,27 @@
       background: transparent;
     }
 
-.chat-main::-webkit-scrollbar {
+    .chat-main::-webkit-scrollbar {
       width: 6px;
     }
-.chat-main::-webkit-scrollbar-track {
+    .chat-main::-webkit-scrollbar-track {
       background: rgba(4, 20, 15, 0.3);
       border-radius: 10px;
     }
-.chat-main::-webkit-scrollbar-thumb {
+    .chat-main::-webkit-scrollbar-thumb {
       background: #00ffaa;
       border-radius: 10px;
       box-shadow: 0 0 15px #00ffaa;
     }
 
-.message-row {
+    .message-row {
       display: flex;
       align-items: flex-start;
       gap: 0.9rem;
       animation: fadeSlide 0.25s ease-out;
     }
 
-.message-row.user {
+    .message-row.user {
       justify-content: flex-end;
     }
 
@@ -202,7 +202,7 @@
       100% { opacity: 1; transform: translateY(0); }
     }
 
-.avatar {
+    .avatar {
       width: 42px;
       height: 42px;
       border-radius: 14px;
@@ -216,26 +216,26 @@
       overflow: hidden;
     }
 
-.avatar img {
+    .avatar img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       filter: drop-shadow(0 0 8px rgba(138, 43, 226, 0.6));
     }
 
-.avatar i {
+    .avatar i {
       color: #00ffaa;
       font-size: 1.4rem;
     }
 
-.user.avatar {
+    .user .avatar {
       background: rgba(0, 150, 100, 0.3);
       border-color: #00ffaa;
       color: white;
       box-shadow: 0 0 18px #00ffaa;
     }
 
-.bubble {
+    .bubble {
       background: rgba(4, 16, 12, 0.85);
       backdrop-filter: blur(18px);
       border: 1px solid rgba(0, 255, 170, 0.35);
@@ -249,7 +249,7 @@
       word-wrap: break-word;
     }
 
-.user.bubble {
+    .user .bubble {
       background: rgba(0, 80, 50, 0.6);
       border: 1px solid #00ffaa;
       border-radius: 1.5rem 1.5rem 0.3rem 1.5rem;
@@ -257,7 +257,7 @@
       color: white;
     }
 
-.input-zone {
+    .input-zone {
       padding: 1.2rem 1.8rem;
       border-top: 1px solid rgba(0, 255, 170, 0.3);
       background: rgba(3, 10, 8, 0.85);
@@ -267,7 +267,7 @@
       align-items: center;
     }
 
-.command-input {
+    .command-input {
       flex: 1;
       background: rgba(2, 12, 8, 0.9);
       border: 1px solid #00ffaa;
@@ -281,21 +281,21 @@
       transition: 0.2s;
       letter-spacing: 0.3px;
     }
-.command-input::placeholder {
+    .command-input::placeholder {
       color: #5a8a73;
       font-style: italic;
     }
-.command-input:focus {
+    .command-input:focus {
       border-color: #00ffaa;
       box-shadow: 0 0 35px rgba(0,255,170,0.4);
     }
 
-.btn-group {
+    .btn-group {
       display: flex;
       gap: 0.7rem;
     }
 
-.send-btn,.speaker-btn,.clear-btn,.export-btn,.import-btn {
+    .send-btn, .speaker-btn, .clear-btn, .export-btn, .import-btn {
       border: 1px solid #00ffaa;
       color: #00ffaa;
       font-size: 1.2rem;
@@ -310,33 +310,33 @@
       box-shadow: 0 0 20px rgba(0,255,170,0.3);
       background: radial-gradient(circle at 30% 30%, #00442c, #00140e);
     }
-.send-btn:hover:not(:disabled),.speaker-btn:hover:not(:disabled),.clear-btn:hover:not(:disabled),.export-btn:hover:not(:disabled),.import-btn:hover:not(:disabled) {
+    .send-btn:hover:not(:disabled), .speaker-btn:hover:not(:disabled), .clear-btn:hover:not(:disabled), .export-btn:hover:not(:disabled), .import-btn:hover:not(:disabled) {
       background: #00ffaa;
       color: #000;
       border-color: white;
       box-shadow: 0 0 40px #00ffaa;
       transform: scale(1.05);
     }
-.send-btn:disabled {
+    .send-btn:disabled {
       opacity: 0.4;
       cursor: not-allowed;
     }
-.speaker-btn.muted {
+    .speaker-btn.muted {
       opacity: 0.5;
       border-color: #ff0044;
       color: #ff0044;
     }
-.send-btn i,.speaker-btn i,.clear-btn i,.export-btn i,.import-btn i {
+    .send-btn i, .speaker-btn i, .clear-btn i, .export-btn i, .import-btn i {
       filter: drop-shadow(0 0 8px #00ffaa);
     }
 
-.quick-actions {
+    .quick-actions {
       display: flex;
       gap: 0.5rem;
       margin-top: 0.2rem;
       flex-wrap: wrap;
     }
-.chip {
+    .chip {
       background: rgba(0, 255, 170, 0.1);
       border: 1px solid #00ffaa;
       color: #b5ffe0;
@@ -347,7 +347,7 @@
       transition: 0.2s;
       font-weight: 500;
     }
-.chip:hover {
+    .chip:hover {
       background: rgba(0, 255, 170, 0.25);
       border-color: white;
       color: white;
@@ -355,16 +355,16 @@
     }
 
     @media (max-width: 700px) {
-.chottu-container {
+      .chottu-container {
         height: 95vh;
       }
-.bubble {
+      .bubble {
         max-width: 85%;
       }
-.btn-group {
+      .btn-group {
         gap: 0.5rem;
       }
-.send-btn,.speaker-btn,.clear-btn,.export-btn,.import-btn {
+      .send-btn, .speaker-btn, .clear-btn, .export-btn, .import-btn {
         width: 45px;
         height: 45px;
         font-size: 1.1rem;
@@ -380,6 +380,7 @@
       <div class="logo-text">
         CHOTTU
       </div>
+    </div>
     <div class="status-panel">
       <div class="core-status" id="wakeToggle" title="Click to toggle wake word">
         <span class="pulse" id="statusPulse"></span> <span id="statusText">WAKE WORD OFF</span>
@@ -412,6 +413,10 @@
         <span class="chip" data-query="Open YouTube">▶ YouTube</span>
         <span class="chip" data-query="Open Gmail">📧 Gmail</span>
         <span class="chip" data-query="What time is it">🕒 Time</span>
+        <span class="chip" data-query="What's the weather in Chennai">🌤️ Weather</span>
+        <span class="chip" data-query="IPL 2026 live score">🏏 IPL Score</span>
+        <span class="chip" data-query="Latest news India">📰 News</span>
+        <span class="chip" data-query="Search Google for trending topics">🔍 Search</span>
         <span class="chip" data-query="Enable wake word">🎤 Wake Word</span>
       </div>
     </div>
@@ -436,19 +441,21 @@
     const chottuIcon = document.getElementById('chottuIcon');
 
     const CHOTTU_ENDPOINT = '/api/chat';
-    const USER_NAME = 'Friend';
     const STORAGE_KEY = 'chottu_chat_history';
+    const NAME_KEY = 'chottu_username';
 
-    const CHOTTU_SYSTEM_PROMPT = `You are Chottu - a friendly, helpful AI assistant.
+    let USER_NAME = localStorage.getItem(NAME_KEY) || 'friend';
+
+    const getSystemPrompt = () => `You are Chottu - a friendly, helpful AI assistant.
 You respond like JARVIS: direct, tactical, intelligent, slightly witty but warm.
 Never say "as an AI". Never explain that you're processing.
 Give direct answers only. No greetings, no fluff, no disclaimers.
 Keep responses concise for voice. Maximum 2 sentences unless user asks for detail.
-The user's name is ${USER_NAME}. Address them by name sometimes.
+The user's name is ${USER_NAME}. Address them by name sometimes, but don't overuse it.
 When asked to open an app or website, respond with "Opening [app name]" and nothing else.`;
 
     let conversationHistory = [
-      { role: 'system', content: CHOTTU_SYSTEM_PROMPT }
+      { role: 'system', content: getSystemPrompt() }
     ];
 
     let voiceEnabled = true;
@@ -471,14 +478,24 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
       'instagram': 'https://instagram.com'
     };
 
-    // Load saved chat from localStorage
+    function checkForName(text) {
+      const nameMatch = text.match(/(?:my name is|i'm|i am|call me|name's)\s+([a-zA-Z]+)/i);
+      if (nameMatch && nameMatch[1]) {
+        const newName = nameMatch[1].charAt(0).toUpperCase() + nameMatch[1].slice(1).toLowerCase();
+        USER_NAME = newName;
+        localStorage.setItem(NAME_KEY, newName);
+        conversationHistory[0].content = getSystemPrompt();
+        return true;
+      }
+      return false;
+    }
+
     function loadChatHistory() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
           conversationHistory = parsed;
-          // Re-render messages
           parsed.forEach(msg => {
             if (msg.role === 'user') {
               appendMessage(msg.content, 'user');
@@ -495,7 +512,6 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
       return false;
     }
 
-    // Save chat to localStorage
     function saveChatHistory() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(conversationHistory));
@@ -504,7 +520,6 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
       }
     }
 
-    // Export chat to file
     exportBtn.addEventListener('click', () => {
       const dataStr = JSON.stringify(conversationHistory, null, 2);
       const dataBlob = new Blob([dataStr], { type: 'application/json' });
@@ -519,7 +534,6 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
       speak('Chat exported.');
     });
 
-    // Import chat from file
     importBtn.addEventListener('click', () => {
       importFile.click();
     });
@@ -554,11 +568,11 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
         }
       };
       reader.readAsText(file);
-      importFile.value = ''; // Reset input
+      importFile.value = '';
     });
 
     function speak(text) {
-      if (!voiceEnabled ||!('speechSynthesis' in window)) return;
+      if (!voiceEnabled || !('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
       const cleanText = text.replace(/<[^>]*>/g, '').replace(/[*_#`]/g, '');
       const utterance = new SpeechSynthesisUtterance(cleanText);
@@ -594,7 +608,7 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
         const platform = searchMatch[1];
         const query = encodeURIComponent(searchMatch[2]);
         const url = platform === 'youtube'
-      ? `https://youtube.com/results?search_query=${query}`
+          ? `https://youtube.com/results?search_query=${query}`
           : `https://google.com/search?q=${query}`;
         window.open(url, '_blank');
         return `Searching ${platform} for ${searchMatch[2]}`;
@@ -624,11 +638,11 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
       };
 
       wakeRecognition.onerror = (e) => {
-        if (e.error!== 'no-speech' && e.error!== 'aborted') console.error('Wake error:', e.error);
+        if (e.error !== 'no-speech' && e.error !== 'aborted') console.error('Wake error:', e.error);
       };
 
       wakeRecognition.onend = () => {
-        if (wakeWordEnabled &&!isListeningForCommand) {
+        if (wakeWordEnabled && !isListeningForCommand) {
           setTimeout(() => wakeRecognition.start(), 250);
         }
       };
@@ -659,7 +673,7 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
       };
 
       commandRecognition.onerror = (e) => {
-        if (e.error!== 'no-speech') {
+        if (e.error !== 'no-speech') {
           appendMessage(`Voice error: ${e.error}`, 'assistant');
         }
         stopCommandMode();
@@ -684,17 +698,19 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
 
     function triggerCommandMode() {
       if (isListeningForCommand) return;
-      wakeRecognition.stop();
-      setTimeout(() => commandRecognition.start(), 100);
+      if (wakeRecognition) wakeRecognition.stop();
+      setTimeout(() => {
+        if (commandRecognition) commandRecognition.start();
+      }, 100);
     }
 
     function stopCommandMode() {
       isListeningForCommand = false;
       chottuIcon.classList.remove('listening');
       statusPulse.classList.remove('listening');
-      statusText.textContent = wakeWordEnabled? 'WAKE WORD ACTIVE' : 'WAKE WORD OFF';
+      statusText.textContent = wakeWordEnabled ? 'WAKE WORD ACTIVE' : 'WAKE WORD OFF';
       userInput.placeholder = "Enter directive or say 'Hey Chottu'...";
-      if (wakeWordEnabled) {
+      if (wakeWordEnabled && wakeRecognition) {
         setTimeout(() => wakeRecognition.start(), 500);
       }
     }
@@ -704,7 +720,7 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
         appendMessage('Wake word not supported. Use Chrome or Edge.', 'assistant');
         return;
       }
-      wakeWordEnabled =!wakeWordEnabled;
+      wakeWordEnabled = !wakeWordEnabled;
       if (wakeWordEnabled) {
         wakeRecognition.start();
         statusText.textContent = 'WAKE WORD ACTIVE';
@@ -718,9 +734,9 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
     });
 
     speakerBtn.addEventListener('click', () => {
-      voiceEnabled =!voiceEnabled;
-      speakerBtn.classList.toggle('muted',!voiceEnabled);
-      speakerBtn.innerHTML = voiceEnabled? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-mute"></i>';
+      voiceEnabled = !voiceEnabled;
+      speakerBtn.classList.toggle('muted', !voiceEnabled);
+      speakerBtn.innerHTML = voiceEnabled ? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-mute"></i>';
       if (!voiceEnabled) window.speechSynthesis.cancel();
       else speak('Voice output enabled.');
     });
@@ -729,7 +745,7 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
       if (confirm('Clear all chat history? This cannot be undone.')) {
         localStorage.removeItem(STORAGE_KEY);
         chatWindow.innerHTML = '';
-        conversationHistory = [{ role: 'system', content: CHOTTU_SYSTEM_PROMPT }];
+        conversationHistory = [{ role: 'system', content: getSystemPrompt() }];
         const greeting = `Hai ${USER_NAME}, Chottu here. Chat cleared. How can I help you today?`;
         appendMessage(greeting, 'assistant');
         speak(greeting);
@@ -741,7 +757,7 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
       row.className = `message-row ${sender}`;
 
       const avatarHtml = sender === 'user'
-  ? `<div class="avatar"><i class="fas fa-user-astronaut"></i></div>`
+        ? `<div class="avatar"><i class="fas fa-user-astronaut"></i></div>`
         : `<div class="avatar"><img src="nethu_core.png" alt="Chottu"></div>`;
 
       const bubble = document.createElement('div');
@@ -811,6 +827,7 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
         return;
       }
 
+      checkForName(messageText);
       appendMessage(messageText, 'user');
       userInput.value = '';
       sendBtn.disabled = true;
@@ -857,7 +874,7 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
       if ('speechSynthesis' in window) {
         speechSynthesis.getVoices();
         window.speechSynthesis.onvoiceschanged = () => {
-          if (!hasGreeted &&!hasHistory) {
+          if (!hasGreeted && !hasHistory) {
             hasGreeted = true;
             setTimeout(() => {
               const greeting = `Hai ${USER_NAME}, Chottu here. How can I help you today?`;
@@ -867,7 +884,7 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
           }
         };
         setTimeout(() => {
-          if (!hasGreeted &&!hasHistory && speechSynthesis.getVoices().length > 0) {
+          if (!hasGreeted && !hasHistory && speechSynthesis.getVoices().length > 0) {
             hasGreeted = true;
             const greeting = `Hai ${USER_NAME}, Chottu here. How can I help you today?`;
             appendMessage(greeting, 'assistant');
@@ -881,4 +898,4 @@ When asked to open an app or website, respond with "Opening [app name]" and noth
   })();
 </script>
 </body>
-</html>   
+</html>
