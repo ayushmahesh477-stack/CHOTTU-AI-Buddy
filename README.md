@@ -9,3 +9,6 @@ The pc must be upto date. You must have a groq account and get the groq api key 
 and paste it in ai when it asks and start working..............
 
 extract bot if chottu others.exe dosent work try start chottu.bat file in chottu.rar.
+
+you can test the ai in the website and it works on any device with a browser.
+the website is : https://chottu-ai-brother.onrender.com
