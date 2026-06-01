@@ -4,22 +4,53 @@ app.use(express.json());
 app.use(express.static('.'));
 
 // ============================================
-// YOUR API KEYS (Already in Render Environment)
+// YOUR API KEYS (from Render Environment)
 // ============================================
 const DEEPSEEK_KEY = process.env.DEEPSEEK_KEY;
 const GROQ_KEY = process.env.GROQ_KEY;
-const OPENAI_KEY = process.env.OPENA1_KEY;  // Note: Typo in your env name
+const OPENAI_KEY = process.env.OPENA1_KEY;
 const WEATHER_KEY = process.env.WEATHER_KEY;
 const GNEWS_KEY = process.env.GNEWS_KEY;
 const TAVILY_KEY = process.env.TAVILY_KEY;
 
 // ============================================
-// 1. AI CHAT - Multiple Providers with Auto-Failover
+// IPL 2026 SCHEDULE (Based on typical IPL schedule)
+// ============================================
+function getIPLStatus() {
+    const today = new Date();
+    const year = today.getFullYear();
+    
+    // IPL typically starts in March and ends in May/June
+    const iplStartDate = new Date(year, 2, 22); // March 22
+    const iplEndDate = new Date(year, 4, 29);   // May 29 (typical final date)
+    
+    let status = {
+        hasHappened: false,
+        isOngoing: false,
+        isUpcoming: false,
+        message: ""
+    };
+    
+    if (today > iplEndDate) {
+        status.hasHappened = true;
+        status.message = `IPL ${year} has already concluded (ended on ${iplEndDate.toLocaleDateString('en-IN')}). The winner has been declared.`;
+    } else if (today >= iplStartDate && today <= iplEndDate) {
+        status.isOngoing = true;
+        status.message = `IPL ${year} is currently ongoing! (Started: ${iplStartDate.toLocaleDateString('en-IN')}, Final: ${iplEndDate.toLocaleDateString('en-IN')})`;
+    } else {
+        status.isUpcoming = true;
+        status.message = `IPL ${year} hasn't started yet. It will begin on ${iplStartDate.toLocaleDateString('en-IN')} and the final will be on ${iplEndDate.toLocaleDateString('en-IN')}.`;
+    }
+    
+    return status;
+}
+
+// ============================================
+// AI CHAT - Multiple Providers with Auto-Failover
 // ============================================
 async function callAI(messages) {
     console.log(`🧠 Trying AI providers...`);
     
-    // Try 1: DeepSeek (Cheapest, 1M context)
     if (DEEPSEEK_KEY) {
         try {
             console.log('   Trying DeepSeek...');
@@ -46,7 +77,6 @@ async function callAI(messages) {
         }
     }
     
-    // Try 2: OpenAI (if you have key)
     if (OPENAI_KEY) {
         try {
             console.log('   Trying OpenAI...');
@@ -73,7 +103,6 @@ async function callAI(messages) {
         }
     }
     
-    // Try 3: Groq (Fastest)
     if (GROQ_KEY) {
         try {
             console.log('   Trying Groq...');
@@ -104,12 +133,16 @@ async function callAI(messages) {
 }
 
 // ============================================
-// 2. WEB SEARCH - Tavily (Primary) + DuckDuckGo (Fallback)
+// WEB SEARCH - Tavily + DuckDuckGo
 // ============================================
 async function searchWeb(query) {
     console.log(`🔍 Searching: ${query}`);
     
-    // Try Tavily (your key)
+    let enhancedQuery = query;
+    if (query.toLowerCase().includes('ipl') || query.toLowerCase().includes('cricket')) {
+        enhancedQuery = `${query} 2026 final winner match result score`;
+    }
+    
     if (TAVILY_KEY) {
         try {
             const response = await fetch('https://api.tavily.com/search', {
@@ -117,27 +150,36 @@ async function searchWeb(query) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     api_key: TAVILY_KEY,
-                    query: query,
-                    search_depth: 'basic',
-                    max_results: 5,
-                    include_answer: true
+                    query: enhancedQuery,
+                    search_depth: 'advanced',
+                    max_results: 10,
+                    include_answer: true,
+                    include_raw_content: true
                 })
             });
             const data = await response.json();
+            
             if (data.answer) {
-                console.log('   ✅ Tavily answered');
+                console.log('   ✅ Tavily provided answer');
                 return data.answer;
             }
             if (data.results && data.results.length > 0) {
+                const relevantResults = data.results.filter(r => 
+                    r.content.toLowerCase().includes('winner') || 
+                    r.content.toLowerCase().includes('champion') ||
+                    r.content.toLowerCase().includes('final') ||
+                    r.content.toLowerCase().includes('defeated')
+                );
+                const resultsToUse = relevantResults.length > 0 ? relevantResults : data.results;
+                const combinedContent = resultsToUse.slice(0, 5).map(r => r.content).join(' ');
                 console.log('   ✅ Tavily found results');
-                return data.results.map(r => r.content).join(' ').substring(0, 1500);
+                return combinedContent.substring(0, 2000);
             }
         } catch(e) {
             console.log('   Tavily failed:', e.message);
         }
     }
     
-    // Fallback to DuckDuckGo (no key needed)
     try {
         console.log('   Trying DuckDuckGo fallback...');
         const response = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`);
@@ -147,14 +189,6 @@ async function searchWeb(query) {
             console.log('   ✅ DuckDuckGo found results');
             return data.AbstractText.substring(0, 1000);
         }
-        if (data.RelatedTopics && data.RelatedTopics.length > 0) {
-            for (const topic of data.RelatedTopics) {
-                if (topic.Text && topic.Text.length > 50) {
-                    console.log('   ✅ DuckDuckGo found related topics');
-                    return topic.Text.replace(/<[^>]*>/g, '').substring(0, 1000);
-                }
-            }
-        }
     } catch(e) {
         console.log('   DuckDuckGo failed:', e.message);
     }
@@ -163,12 +197,11 @@ async function searchWeb(query) {
 }
 
 // ============================================
-// 3. NEWS - GNews (Your Key) + Google News RSS (Fallback)
+// NEWS - GNews + Google News RSS
 // ============================================
 async function getNews(topic = 'India') {
     console.log(`📰 Fetching news for: ${topic}`);
     
-    // Try GNews (your key)
     if (GNEWS_KEY) {
         try {
             const url = `https://gnews.io/api/v4/search?q=${topic}&lang=en&country=in&max=5&apikey=${GNEWS_KEY}`;
@@ -184,11 +217,9 @@ async function getNews(topic = 'India') {
         }
     }
     
-    // Fallback to Google News RSS
     try {
-        console.log('   Trying Google News RSS fallback...');
-        const searchTopic = topic === 'India' ? 'India' : topic;
-        const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(searchTopic)}&hl=en-IN&gl=IN&ceid=IN:en`;
+        console.log('   Trying Google News RSS...');
+        const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(topic)}&hl=en-IN&gl=IN&ceid=IN:en`;
         const response = await fetch(rssUrl);
         const rssText = await response.text();
         
@@ -198,7 +229,7 @@ async function getNews(topic = 'India') {
         if (titleMatches) {
             for (let i = 1; i < Math.min(titleMatches.length, 6); i++) {
                 let title = titleMatches[i].replace(/<title>|<\/title>/g, '');
-                title = title.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#39;/g, "'");
+                title = title.replace(/&quot;/g, '"').replace(/&amp;/g, '&');
                 if (title.length > 5 && !title.includes('news.google.com')) {
                     headlines.push(`${i}. ${title}`);
                 }
@@ -206,18 +237,18 @@ async function getNews(topic = 'India') {
         }
         
         if (headlines.length > 0) {
-            console.log('   ✅ Google News RSS found headlines');
+            console.log('   ✅ Google News found headlines');
             return headlines.join('\n');
         }
     } catch(e) {
-        console.log('   Google News RSS failed:', e.message);
+        console.log('   Google News failed:', e.message);
     }
     
     return null;
 }
 
 // ============================================
-// 4. WEATHER - OpenWeatherMap (Your Key)
+// WEATHER
 // ============================================
 async function getWeather(city = 'Chennai') {
     if (WEATHER_KEY) {
@@ -230,14 +261,14 @@ async function getWeather(city = 'Chennai') {
                 return `${city}: ${data.main.temp}°C, ${data.weather[0].description}, Humidity: ${data.main.humidity}%`;
             }
         } catch(e) {
-            console.log('Weather API failed:', e.message);
+            console.log('Weather failed:', e.message);
         }
     }
     return `Weather service temporarily unavailable for ${city}, sir.`;
 }
 
 // ============================================
-// 5. APP LAUNCHER
+// APP LAUNCHER
 // ============================================
 const APP_LINKS = {
     'youtube': 'https://youtube.com',
@@ -267,7 +298,7 @@ function findAppToOpen(message) {
 }
 
 // ============================================
-// 6. TIME FUNCTION
+// TIME FUNCTION
 // ============================================
 function getCurrentDateTime() {
     const now = new Date();
@@ -283,7 +314,7 @@ function getCurrentDateTime() {
 }
 
 // ============================================
-// 7. JARVIS SYSTEM PROMPT
+// JARVIS SYSTEM PROMPT
 // ============================================
 const JARVIS_PROMPT = `You are Chottu - an AI assistant that responds exactly like JARVIS from Iron Man.
 
@@ -309,6 +340,19 @@ app.post('/api/chat', async (req, res) => {
         const lowerMsg = userMessage.toLowerCase();
         
         console.log(`\n🎯 Chottu received: ${userMessage}`);
+        
+        // ===== IPL STATUS CHECK (New Feature) =====
+        if (lowerMsg.includes('ipl') && (lowerMsg.includes('status') || lowerMsg.includes('happened') || 
+            lowerMsg.includes('ongoing') || lowerMsg.includes('upcoming') || lowerMsg.includes('when'))) {
+            const iplStatus = getIPLStatus();
+            return res.json({ 
+                choices: [{ 
+                    message: { 
+                        content: `Sir, ${iplStatus.message}\n\nFor specific match results, you can ask me to "search for IPL ${new Date().getFullYear()} winner".` 
+                    } 
+                }] 
+            });
+        }
         
         // ===== OPEN APPS =====
         if (lowerMsg.includes('open') || lowerMsg.includes('launch')) {
@@ -347,7 +391,74 @@ app.post('/api/chat', async (req, res) => {
             return res.json({ choices: [{ message: { content: `Sir, I couldn't fetch news at the moment. Try visiting news.google.com for the latest updates.` } }] });
         }
         
-        // ===== SEARCH ANYTHING (IPL, Sports, General Questions) =====
+        // ===== SPORTS/IPL/CRICKET (with status awareness) =====
+        if (lowerMsg.includes('ipl') || lowerMsg.includes('cricket') || 
+            lowerMsg.includes('score') || lowerMsg.includes('match') || 
+            lowerMsg.includes('winner') || lowerMsg.includes('champion')) {
+            
+            console.log(`🏏 Sports query detected: ${userMessage}`);
+            
+            // First check if the user is asking for the winner
+            const isAskingForWinner = lowerMsg.includes('winner') || lowerMsg.includes('won') || lowerMsg.includes('champion');
+            
+            if (isAskingForWinner) {
+                const iplStatus = getIPLStatus();
+                const currentYear = new Date().getFullYear();
+                
+                // If IPL hasn't happened yet, tell the user
+                if (!iplStatus.hasHappened) {
+                    if (iplStatus.isOngoing) {
+                        return res.json({ 
+                            choices: [{ 
+                                message: { 
+                                    content: `Sir, IPL ${currentYear} is currently ongoing! The winner hasn't been declared yet. The final is scheduled for May/June ${currentYear}. I can search for live scores if you'd like.` 
+                                } 
+                            }] 
+                        });
+                    } else if (iplStatus.isUpcoming) {
+                        return res.json({ 
+                            choices: [{ 
+                                message: { 
+                                    content: `Sir, IPL ${currentYear} hasn't started yet. It will begin in March ${currentYear}. There is no winner yet. Would you like me to remind you when it starts?` 
+                                } 
+                            }] 
+                        });
+                    }
+                }
+            }
+            
+            // Search the web for IPL information
+            const searchResults = await searchWeb(userMessage);
+            
+            if (searchResults) {
+                const iplStatus = getIPLStatus();
+                const contextPrompt = `Current IPL status: ${iplStatus.message}\n\n`;
+                
+                const sportsPrompt = `${contextPrompt}Based on this search information, answer the user's question: "${userMessage}"
+
+Search results:
+${searchResults}
+
+Give a DIRECT, SPECIFIC answer. If you find a winner, say "Sir, [Team Name] won IPL ${new Date().getFullYear()}." 
+If no winner is found in the search results and the tournament should have happened, say "Sir, I couldn't find the IPL winner in my search. The information may not be available yet or the tournament may still be ongoing."
+Be honest about what you find.`;
+                
+                const aiResponse = await callAI([{ role: 'user', content: sportsPrompt }]);
+                return res.json({ choices: [{ message: { content: aiResponse.choices[0].message.content } }] });
+            }
+            
+            // If search fails, provide helpful response
+            const iplStatus = getIPLStatus();
+            return res.json({ 
+                choices: [{ 
+                    message: { 
+                        content: `Sir, ${iplStatus.message}\n\nI searched for IPL information but couldn't find specific results. You can try:\n• Asking "IPL schedule ${new Date().getFullYear()}"\n• Checking iplt20.com directly\n• Asking me to search for "IPL live score"` 
+                    } 
+                }] 
+            });
+        }
+        
+        // ===== GENERAL SEARCH =====
         const searchResults = await searchWeb(userMessage);
         
         if (searchResults) {
@@ -356,7 +467,7 @@ app.post('/api/chat', async (req, res) => {
 Information found:
 ${searchResults}
 
-Respond concisely and helpfully, starting with "Sir,". Be specific with facts, names, and numbers. Don't say "based on the information" - just give the answer directly.`;
+Respond concisely and helpfully, starting with "Sir,". Be specific with facts, names, and numbers.`;
             
             const aiResponse = await callAI([{ role: 'user', content: searchPrompt }]);
             return res.json({ choices: [{ message: { content: aiResponse.choices[0].message.content } }] });
@@ -381,18 +492,20 @@ Respond concisely and helpfully, starting with "Sir,". Be specific with facts, n
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
+    const iplStatus = getIPLStatus();
     console.log(`\n${'='.repeat(50)}`);
     console.log(`⚡ CHOTTU (JARVIS Mode) - ONLINE`);
     console.log(`${'='.repeat(50)}`);
     console.log(`📍 URL: ${process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`}`);
     console.log(`📅 Time: ${getCurrentDateTime()}`);
+    console.log(`\n🏏 IPL Status: ${iplStatus.message}`);
     console.log(`\n🔌 API STATUS:`);
-    console.log(`   🧠 DeepSeek: ${DEEPSEEK_KEY ? '✅' : '❌'} (Primary AI)`);
-    console.log(`   🧠 OpenAI: ${OPENAI_KEY ? '✅' : '❌'} (Fallback AI)`);
-    console.log(`   🧠 Groq: ${GROQ_KEY ? '✅' : '❌'} (Fallback AI)`);
-    console.log(`   🔍 Tavily: ${TAVILY_KEY ? '✅' : '❌'} (Primary Search)`);
+    console.log(`   🧠 DeepSeek: ${DEEPSEEK_KEY ? '✅' : '❌'}`);
+    console.log(`   🧠 OpenAI: ${OPENAI_KEY ? '✅' : '❌'}`);
+    console.log(`   🧠 Groq: ${GROQ_KEY ? '✅' : '❌'}`);
+    console.log(`   🔍 Tavily: ${TAVILY_KEY ? '✅' : '❌'}`);
     console.log(`   🌤️ Weather: ${WEATHER_KEY ? '✅' : '❌'}`);
-    console.log(`   📰 News: ${GNEWS_KEY ? '✅' : '❌'} (Primary News)`);
+    console.log(`   📰 News: ${GNEWS_KEY ? '✅' : '❌'}`);
     console.log(`${'='.repeat(50)}`);
     console.log(`🎯 "Sir, Chottu is ready to assist you."`);
     console.log(`${'='.repeat(50)}\n`);
